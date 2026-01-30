@@ -1,1 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LED Arena Counter - HELLLING AREA Format</title>
+<style>
+html, body {
+  margin:0; padding:0;
+  width:100%; height:100%;
+  background:black;
+  overflow:hidden;
+  user-select:none;
+  font-family:'Arial Black',Arial,sans-serif;
+}
 
+/* CONTAINER */
+#container{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  height:100%;
+  padding-top:12vh;   /* space for cockpit name at top */
+}
+
+/* COCKPIT NAME FIXED ON TOP */
+#cockpit-name {
+  position: fixed;      /* always on top */
+  top: 10px;            
+  left: 50%;
+  transform: translateX(-50%);
+  color:#00ffff;
+  font-size:6vw;
+  text-align:center;
+  cursor:text;
+  font-weight:bold;
+  z-index: 20;          /* above everything */
+}
+
+/* STAGE */
+.stage{
+  position: relative;
+  font-size:8vw;
+  margin:1vh 0;
+  width: 80%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.stage-text {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  font-weight: bold; /* bold letters */
+  text-shadow: 0 0 10px currentColor;
+  transition: all 0.2s ease;
+}
+
+.jump-zone {
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  z-index:0;
+}
+
+#ready{color:#00ff4c;}
+#limber{color:#ffffff;}
+#helling-area{color:#ff2a2a;}
+.active{ transform:scale(1.05); }
+
+/* PULSING GLOW EFFECT */
+.pulse {
+  animation: pulseGlow 0.7s infinite alternate;
+}
+@keyframes pulseGlow{
+  0% { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; }
+  50% { text-shadow: 0 0 40px currentColor, 0 0 80px currentColor, 0 0 120px currentColor; }
+  100% { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; }
+}
+
+/* MODAL */
+#modal{
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#modal.show{
+  opacity:1;
+  pointer-events: all;
+}
+#modal-content{
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
+  color:white;
+  text-align:center;
+  transform: scale(0.7);
+  transition: transform 0.3s ease;
+}
+#modal.show #modal-content{
+  transform: scale(1);
+}
+#modal-content input{
+  width: 80px;
+  font-size:1.5rem;
+  text-align:center;
+}
+#modal-content button{
+  font-size:1rem;
+  padding:5px 10px;
+  margin-left:10px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div id="container">
+  <!-- COCKPIT NAME -->
+  <div id="cockpit-name" contenteditable="true">ARENA 1</div>
+
+  <!-- STAGES -->
+  <div class="stage" id="ready">
+    <div class="stage-text">READY <span class="number">1</span></div>
+    <div class="jump-zone"></div>
+  </div>
+  <div class="stage" id="limber">
+    <div class="stage-text">LIMBER <span class="number">1</span></div>
+    <div class="jump-zone"></div>
+  </div>
+  <div class="stage" id="helling-area">
+    <div class="stage-text">HELLING AREA <span class="number">1</span></div>
+    <div class="jump-zone"></div>
+  </div>
+</div>
+
+<audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3"></audio>
+
+<!-- MODAL -->
+<div id="modal">
+  <div id="modal-content">
+    <div id="modal-title"></div>
+    <input type="number" id="modal-input" min="1"/>
+    <button id="modal-ok">Go</button>
+  </div>
+</div>
+
+<script>
+let stages = ["READY","LIMBER","HELLING AREA"];
+let stageNumbers = {"READY":1, "LIMBER":1, "HELLING AREA":1};
+let stageIndex = 0;
+const REPEAT_COUNT = 5;
+const PAUSE_MS = 1500;
+let longPressTimer = null;
+let startY = null;
+
+const stageEls = {
+  "READY": document.getElementById("ready"),
+  "LIMBER": document.getElementById("limber"),
+  "HELLING AREA": document.getElementById("helling-area")
+};
+const beep = document.getElementById("beep");
+
+/* MODAL ELEMENTS */
+const modal = document.getElementById("modal");
+const modalTitle = document.getElementById("modal-title");
+const modalInput = document.getElementById("modal-input");
+const modalOk = document.getElementById("modal-ok");
+
+/* COCKPIT NAME */
+const cockpitEl = document.getElementById("cockpit-name");
+
+/* ===== LOAD LAST STATE ===== */
+function loadState(){
+  const saved = localStorage.getItem('arenaState');
+  if(saved){
+    const data = JSON.parse(saved);
+    stageNumbers = data.stageNumbers || stageNumbers;
+    stageIndex = data.stageIndex || stageIndex;
+  }
+  const cockpitName = localStorage.getItem('cockpitName');
+  if(cockpitName) cockpitEl.textContent = cockpitName;
+}
+
+/* ===== SAVE STATE ===== */
+function saveState(){
+  localStorage.setItem('arenaState', JSON.stringify({
+    stageNumbers: stageNumbers,
+    stageIndex: stageIndex
+  }));
+}
+
+// SAVE cockpit name
+cockpitEl.addEventListener("input", ()=>{
+  localStorage.setItem('cockpitName', cockpitEl.textContent.trim());
+});
+
+/* ===== UPDATE DISPLAY ===== */
+function updateDisplay(){
+  Object.values(stageEls).forEach(el=>el.classList.remove("active","pulse"));
+  let s = stages[stageIndex];
+  stageEls[s].classList.add("active");
+  stages.forEach(k=>{
+    stageEls[k].querySelector(".stage-text").innerHTML = `${k} <span class="number">${stageNumbers[k]}</span>`;
+  });
+  saveState();
+}
+
+/* ===== SPEAK ===== */
+function speak(text){
+  return new Promise(resolve=>{
+    let u = new SpeechSynthesisUtterance(text);
+    let voices = speechSynthesis.getVoices();
+    u.voice = voices.find(v=>v.lang.startsWith("en")) || voices[0];
+    u.onend = resolve;
+    speechSynthesis.speak(u);
+  });
+}
+
+/* ===== ANNOUNCE WITH PULSE ===== */
+async function announce(){
+  let stage = stages[stageIndex];
+  let num = stageNumbers[stage];
+  let text = `${stage} ${num}`; // speech natural, no underscore
+  stageEls[stage].classList.add("pulse");
+  speechSynthesis.cancel();
+  for(let i=0;i<REPEAT_COUNT;i++){
+    beep.currentTime = 0; beep.play();
+    await speak(text);
+    await new Promise(r=>setTimeout(r, PAUSE_MS));
+  }
+  stageEls[stage].classList.remove("pulse");
+}
+
+/* ===== MODAL ===== */
+function showModal(stageName){
+  modalTitle.textContent = `Jump ${stageName} to number:`;
+  modalInput.value = stageNumbers[stageName];
+  modal.style.display = "flex";
+  requestAnimationFrame(()=>{
+    modal.classList.add("show");
+    modalInput.focus();
+  });
+}
+function hideModal(){
+  modal.classList.remove("show");
+  setTimeout(()=>{ modal.style.display = "none"; }, 300);
+}
+
+/* ===== STAGE INTERACTIONS ===== */
+function setupStage(el, idx){
+  let lastTap = 0;
+  const DOUBLE_TAP_DELAY = 300;
+  const stageName = stages[idx];
+  const textEl = el.querySelector(".stage-text");
+  const zoneEl = el.querySelector(".jump-zone");
+
+  // LONG PRESS → SHOW MODAL
+  zoneEl.addEventListener("pointerdown", ()=>{
+    longPressTimer = setTimeout(()=>{
+      stageIndex = idx;
+      showModal(stageName);
+    }, 600);
+  });
+  zoneEl.addEventListener("pointerup", ()=>clearTimeout(longPressTimer));
+
+  // SINGLE / DOUBLE TAP
+  textEl.addEventListener("click", ()=>{
+    let now = new Date().getTime();
+    stageIndex = idx;
+    if(now - lastTap < DOUBLE_TAP_DELAY){
+      stageNumbers[stageName] = Math.max(1, stageNumbers[stageName]-1);
+      updateDisplay();
+      announce();
+      lastTap = 0;
+    } else {
+      stageNumbers[stageName]++;
+      updateDisplay();
+      announce();
+      lastTap = now;
+    }
+  });
+
+  // SWIPE DETECTION
+  el.addEventListener("pointerdown", e=>{ startY = e.clientY; });
+  el.addEventListener("pointerup", e=>{
+    if(startY === null) return;
+    let deltaY = startY - e.clientY;
+    if(Math.abs(deltaY) > 30){
+      stageIndex = idx;
+      if(deltaY > 0){ stageNumbers[stageName]++; }
+      else { stageNumbers[stageName] = Math.max(1, stageNumbers[stageName]-1); }
+      updateDisplay();
+      announce();
+    }
+    startY = null;
+  });
+}
+
+/* APPLY TO ALL STAGES */
+Object.values(stageEls).forEach((el, idx)=>{ setupStage(el, idx); });
+
+/* MODAL OK BUTTON */
+modalOk.addEventListener("click", ()=>{
+  let n = parseInt(modalInput.value);
+  if(!isNaN(n) && n>0){
+    stageNumbers[stages[stageIndex]] = n;
+    updateDisplay();
+    announce();
+  }
+  hideModal();
+});
+
+/* CLOSE MODAL ESC / BACKGROUND */
+document.addEventListener("keydown", e=>{
+  if(e.key === "Escape") hideModal();
+});
+modal.addEventListener("click", e=>{
+  if(e.target === modal) hideModal();
+});
+
+/* ===== INITIAL LOAD ===== */
+loadState();
+updateDisplay();
+</script>
+</body>
+</html>
