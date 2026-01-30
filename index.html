@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>LED Arena Counter - HELLLING AREA Format</title>
+<title>LED Arena Counter - Neon Glow</title>
 <style>
 html, body {
   margin:0; padding:0;
@@ -21,13 +21,13 @@ html, body {
   justify-content:center;
   align-items:center;
   height:100%;
-  padding-top:12vh;   /* space for cockpit name at top */
+  padding-top:12vh;
 }
 
 /* COCKPIT NAME FIXED ON TOP */
 #cockpit-name {
-  position: fixed;      /* always on top */
-  top: 10px;            
+  position: fixed;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   color:#00ffff;
@@ -35,7 +35,7 @@ html, body {
   text-align:center;
   cursor:text;
   font-weight:bold;
-  z-index: 20;          /* above everything */
+  z-index: 20;
 }
 
 /* STAGE */
@@ -53,7 +53,7 @@ html, body {
   position: relative;
   z-index: 1;
   cursor: pointer;
-  font-weight: bold; /* bold letters */
+  font-weight: bold;
   text-shadow: 0 0 10px currentColor;
   transition: all 0.2s ease;
 }
@@ -77,6 +77,39 @@ html, body {
   0% { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; }
   50% { text-shadow: 0 0 40px currentColor, 0 0 80px currentColor, 0 0 120px currentColor; }
   100% { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; }
+}
+
+/* NEON GLOW HIGHLIGHT */
+.highlight-glow {
+  position: relative;
+  animation: neonGlow 0.7s infinite alternate;
+  z-index: 2;
+}
+@keyframes neonGlow {
+  0% {
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 30px currentColor,
+      0 0 40px currentColor;
+  }
+  50% {
+    text-shadow:
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 40px currentColor,
+      0 0 60px currentColor,
+      0 0 80px currentColor;
+  }
+  100% {
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 30px currentColor,
+      0 0 40px currentColor;
+  }
 }
 
 /* MODAL */
@@ -224,18 +257,40 @@ function speak(text){
   });
 }
 
-/* ===== ANNOUNCE WITH PULSE ===== */
+/* ===== ANNOUNCE WITH NEON GLOW ===== */
 async function announce(){
   let stage = stages[stageIndex];
   let num = stageNumbers[stage];
-  let text = `${stage} ${num}`; // speech natural, no underscore
+  let text = `${stage} ${num}`; // text to speak
+
+  const textEl = stageEls[stage].querySelector(".stage-text");
   stageEls[stage].classList.add("pulse");
-  speechSynthesis.cancel();
+
+  // Stage color mapping
+  let colorMap = {
+    "READY": "#00ff4c",
+    "LIMBER": "#ffffff",
+    "HELLING AREA": "#ff2a2a"
+  };
+  let highlightColor = colorMap[stage] || "yellow";
+
   for(let i=0;i<REPEAT_COUNT;i++){
-    beep.currentTime = 0; beep.play();
-    await speak(text);
+    // Neon glow on whole text (word + number)
+    textEl.style.color = highlightColor;
+    textEl.classList.add("highlight-glow");
+
+    beep.currentTime = 0; 
+    beep.play();
+
+    await speak(text); // wait for AI voice
+
+    // Remove glow
+    textEl.classList.remove("highlight-glow");
+    textEl.style.color = colorMap[stage]; // reset original color
+
     await new Promise(r=>setTimeout(r, PAUSE_MS));
   }
+
   stageEls[stage].classList.remove("pulse");
 }
 
