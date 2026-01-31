@@ -6,384 +6,225 @@
 <title>LED Arena Counter - Neon Glow</title>
 <style>
 html, body {
-  margin:0; padding:0;
-  width:100%; height:100%;
-  background:black;
-  overflow:hidden;
-  user-select:none;
+  margin:0; padding:0; width:100%; height:100%;
+  background:black; overflow:hidden;
   font-family:'Arial Black',Arial,sans-serif;
+  touch-action: manipulation; overscroll-behavior:none;
+  user-select:none;
 }
-
-/* CONTAINER */
+*{
+  -webkit-touch-callout:none; -webkit-user-select:none;
+  -moz-user-select:none; -ms-user-select:none; user-select:none;
+}
 #container{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  height:100%;
-  padding-top:12vh;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  height:100%; padding-top:12vh;
 }
-
-/* COCKPIT NAME FIXED ON TOP */
-#cockpit-name {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  color:#00ffff;
-  font-size:6vw;
-  text-align:center;
-  cursor:text;
-  font-weight:bold;
-  z-index: 20;
+#cockpit-name{
+  position:fixed; top:10px; left:50%; transform:translateX(-50%);
+  color:#00ffff; font-size:6vw; font-weight:bold; z-index:20;
 }
-
-/* STAGE */
 .stage{
-  position: relative;
-  font-size:8vw;
-  margin:1vh 0;
-  width: 80%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  position:relative; font-size:8vw; margin:1vh 0;
+  width:80%; display:flex; justify-content:center; align-items:center;
 }
-
-.stage-text {
-  position: relative;
-  z-index: 1;
-  cursor: pointer;
-  font-weight: bold;
-  text-shadow: 0 0 10px currentColor;
-  transition: all 0.2s ease;
-}
-
-.jump-zone {
-  position: absolute;
-  top:0; left:0; right:0; bottom:0;
-  z-index:0;
-}
-
+.stage-text{ font-weight:bold; cursor:pointer; text-shadow:0 0 10px currentColor; transition:all .2s ease; }
+.jump-zone{ position:absolute; inset:0; }
 #ready{color:#00ff4c;}
 #limber{color:#ffffff;}
 #helling-area{color:#ff2a2a;}
-.active{ transform:scale(1.05); }
-
-/* PULSING GLOW EFFECT */
-.pulse {
-  animation: pulseGlow 0.7s infinite alternate;
-}
-@keyframes pulseGlow{
-  0% { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; }
-  50% { text-shadow: 0 0 40px currentColor, 0 0 80px currentColor, 0 0 120px currentColor; }
-  100% { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; }
-}
-
-/* NEON GLOW HIGHLIGHT */
-.highlight-glow {
-  position: relative;
-  animation: neonGlow 0.7s infinite alternate;
-  z-index: 2;
-}
-@keyframes neonGlow {
-  0% {
-    text-shadow:
-      0 0 5px currentColor,
-      0 0 10px currentColor,
-      0 0 20px currentColor,
-      0 0 30px currentColor,
-      0 0 40px currentColor;
-  }
-  50% {
-    text-shadow:
-      0 0 10px currentColor,
-      0 0 20px currentColor,
-      0 0 40px currentColor,
-      0 0 60px currentColor,
-      0 0 80px currentColor;
-  }
-  100% {
-    text-shadow:
-      0 0 5px currentColor,
-      0 0 10px currentColor,
-      0 0 20px currentColor,
-      0 0 30px currentColor,
-      0 0 40px currentColor;
-  }
-}
-
-/* MODAL */
-#modal{
-  position: fixed;
-  top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-#modal.show{
-  opacity:1;
-  pointer-events: all;
-}
-#modal-content{
-  background: #222;
-  padding: 20px;
-  border-radius: 10px;
-  color:white;
-  text-align:center;
-  transform: scale(0.7);
-  transition: transform 0.3s ease;
-}
-#modal.show #modal-content{
-  transform: scale(1);
-}
-#modal-content input{
-  width: 80px;
-  font-size:1.5rem;
-  text-align:center;
-}
-#modal-content button{
-  font-size:1rem;
-  padding:5px 10px;
-  margin-left:10px;
-  cursor:pointer;
+.active{transform:scale(1.05);}
+.pulse{animation:pulseGlow .7s infinite alternate;}
+@keyframes pulseGlow{0%{text-shadow:0 0 20px currentColor;}50%{text-shadow:0 0 80px currentColor;}100%{text-shadow:0 0 20px currentColor;}}
+.highlight-glow{animation:neonGlow .7s infinite alternate;}
+@keyframes neonGlow{0%{text-shadow:0 0 10px currentColor;}50%{text-shadow:0 0 80px currentColor;}100%{text-shadow:0 0 10px currentColor;}}
+#modal{position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition:.3s;}
+#modal.show{opacity:1; pointer-events:auto;}
+#modal-content{background:#222; color:white; padding:20px; border-radius:10px; transform:scale(.7); transition:.3s;}
+#modal.show #modal-content{transform:scale(1);}
+#modal-content input{font-size:1.5rem; width:80px; text-align:center;}
+#modal-content button{font-size:1rem; padding:5px 10px; margin-left:10px;}
+#start-screen{
+  position:fixed; inset:0; background:black; color:white;
+  display:flex; justify-content:center; align-items:center; font-size:5vw;
+  z-index:50; cursor:pointer; user-select:none; text-align:center;
 }
 </style>
 </head>
 <body>
-<div id="container">
-  <!-- COCKPIT NAME -->
+
+<!-- START SCREEN -->
+<div id="start-screen">TAP TO START</div>
+
+<div id="container" style="display:none;">
   <div id="cockpit-name" contenteditable="true">ARENA 1</div>
 
-  <!-- STAGES -->
   <div class="stage" id="ready">
     <div class="stage-text">READY <span class="number">1</span></div>
     <div class="jump-zone"></div>
   </div>
+
   <div class="stage" id="limber">
     <div class="stage-text">LIMBER <span class="number">1</span></div>
     <div class="jump-zone"></div>
   </div>
+
   <div class="stage" id="helling-area">
     <div class="stage-text">HELLING AREA <span class="number">1</span></div>
     <div class="jump-zone"></div>
   </div>
 </div>
 
-<audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3"></audio>
+<!-- AUDIO -->
+<audio id="beep" preload="auto">
+  <source src="beep.mp3" type="audio/mpeg">
+  <source src="https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3" type="audio/mpeg">
+</audio>
 
 <!-- MODAL -->
 <div id="modal">
   <div id="modal-content">
     <div id="modal-title"></div>
-    <input type="number" id="modal-input" min="1"/>
+    <input type="number" id="modal-input" min="1">
     <button id="modal-ok">Go</button>
   </div>
 </div>
 
 <script>
-let stages = ["READY","LIMBER","HELLING AREA"];
-let stageNumbers = {"READY":1, "LIMBER":1, "HELLING AREA":1};
-let stageIndex = 0;
-const REPEAT_COUNT = 5;
-const PAUSE_MS = 1500;
-let longPressTimer = null;
-let startY = null;
+/* ===== DATA ===== */
+let stages=["READY","LIMBER","HELLING AREA"];
+let stageNumbers={READY:1,LIMBER:1,"HELLING AREA":1};
+let stageIndex=0;
+const REPEAT_COUNT=5, PAUSE_MS=1500;
+let longPressTimer=null;
 
-const stageEls = {
-  "READY": document.getElementById("ready"),
-  "LIMBER": document.getElementById("limber"),
-  "HELLING AREA": document.getElementById("helling-area")
+const stageEls={
+  READY:document.getElementById("ready"),
+  LIMBER:document.getElementById("limber"),
+  "HELLING AREA":document.getElementById("helling-area")
 };
-const beep = document.getElementById("beep");
+const beep=document.getElementById("beep");
+const modal=document.getElementById("modal");
+const modalTitle=document.getElementById("modal-title");
+const modalInput=document.getElementById("modal-input");
+const modalOk=document.getElementById("modal-ok");
+const cockpitEl=document.getElementById("cockpit-name");
+const startScreen=document.getElementById("start-screen");
+const container=document.getElementById("container");
 
-/* MODAL ELEMENTS */
-const modal = document.getElementById("modal");
-const modalTitle = document.getElementById("modal-title");
-const modalInput = document.getElementById("modal-input");
-const modalOk = document.getElementById("modal-ok");
-
-/* COCKPIT NAME */
-const cockpitEl = document.getElementById("cockpit-name");
-
-/* ===== LOAD LAST STATE ===== */
+/* ===== STORAGE ===== */
 function loadState(){
-  const saved = localStorage.getItem('arenaState');
-  if(saved){
-    const data = JSON.parse(saved);
-    stageNumbers = data.stageNumbers || stageNumbers;
-    stageIndex = data.stageIndex || stageIndex;
-  }
-  const cockpitName = localStorage.getItem('cockpitName');
-  if(cockpitName) cockpitEl.textContent = cockpitName;
+  const s=localStorage.getItem("arenaState");
+  if(s){const d=JSON.parse(s); stageNumbers=d.stageNumbers||stageNumbers; stageIndex=d.stageIndex||stageIndex;}
+  const c=localStorage.getItem("cockpitName");
+  if(c) cockpitEl.textContent=c;
 }
-
-/* ===== SAVE STATE ===== */
 function saveState(){
-  localStorage.setItem('arenaState', JSON.stringify({
-    stageNumbers: stageNumbers,
-    stageIndex: stageIndex
-  }));
+  localStorage.setItem("arenaState",JSON.stringify({stageNumbers,stageIndex}));
 }
+cockpitEl.addEventListener("input",()=>{localStorage.setItem("cockpitName",cockpitEl.textContent.trim());});
 
-// SAVE cockpit name
-cockpitEl.addEventListener("input", ()=>{
-  localStorage.setItem('cockpitName', cockpitEl.textContent.trim());
-});
-
-/* ===== UPDATE DISPLAY ===== */
+/* ===== DISPLAY ===== */
 function updateDisplay(){
   Object.values(stageEls).forEach(el=>el.classList.remove("active","pulse"));
-  let s = stages[stageIndex];
+  const s=stages[stageIndex];
   stageEls[s].classList.add("active");
   stages.forEach(k=>{
-    stageEls[k].querySelector(".stage-text").innerHTML = `${k} <span class="number">${stageNumbers[k]}</span>`;
+    stageEls[k].querySelector(".stage-text").innerHTML=`${k} <span class="number">${stageNumbers[k]}</span>`;
   });
   saveState();
 }
 
 /* ===== SPEAK ===== */
 function speak(text){
-  return new Promise(resolve=>{
-    let u = new SpeechSynthesisUtterance(text);
-    let voices = speechSynthesis.getVoices();
-    u.voice = voices.find(v=>v.lang.startsWith("en")) || voices[0];
-    u.onend = resolve;
-    speechSynthesis.speak(u);
+  return new Promise(res=>{
+    if(!("speechSynthesis" in window)){res(); return;}
+    const u=new SpeechSynthesisUtterance(text);
+    const v=speechSynthesis.getVoices();
+    if(v.length===0){res(); return;}
+    u.voice=v.find(x=>x.lang.startsWith("en"))||v[0];
+    u.onend=res; speechSynthesis.speak(u);
   });
 }
 
-/* ===== ANNOUNCE WITH NEON GLOW ===== */
+/* ===== ANNOUNCE ===== */
 async function announce(){
-  let stage = stages[stageIndex];
-  let num = stageNumbers[stage];
-  let text = `${stage} ${num}`; // text to speak
-
-  const textEl = stageEls[stage].querySelector(".stage-text");
+  const stage=stages[stageIndex], num=stageNumbers[stageIndex]||stageNumbers[stages[stageIndex]], text=`${stage} ${num}`;
+  const textEl=stageEls[stage].querySelector(".stage-text");
   stageEls[stage].classList.add("pulse");
-
-  // Stage color mapping
-  let colorMap = {
-    "READY": "#00ff4c",
-    "LIMBER": "#ffffff",
-    "HELLING AREA": "#ff2a2a"
-  };
-  let highlightColor = colorMap[stage] || "yellow";
-
   for(let i=0;i<REPEAT_COUNT;i++){
-    // Neon glow on whole text (word + number)
-    textEl.style.color = highlightColor;
     textEl.classList.add("highlight-glow");
-
-    beep.currentTime = 0; 
-    beep.play();
-
-    await speak(text); // wait for AI voice
-
-    // Remove glow
+    beep.currentTime=0; beep.play();
+    await speak(text);
     textEl.classList.remove("highlight-glow");
-    textEl.style.color = colorMap[stage]; // reset original color
-
-    await new Promise(r=>setTimeout(r, PAUSE_MS));
+    await new Promise(r=>setTimeout(r,PAUSE_MS));
   }
-
   stageEls[stage].classList.remove("pulse");
 }
 
 /* ===== MODAL ===== */
-function showModal(stageName){
-  modalTitle.textContent = `Jump ${stageName} to number:`;
-  modalInput.value = stageNumbers[stageName];
-  modal.style.display = "flex";
-  requestAnimationFrame(()=>{
-    modal.classList.add("show");
-    modalInput.focus();
+function showModal(name){modalTitle.textContent=`Jump ${name} to number:`; modalInput.value=stageNumbers[name]; modal.classList.add("show");}
+function hideModal(){modal.classList.remove("show");}
+
+/* ===== STAGE EVENTS ===== */
+function setupStage(el,idx){
+  let lastTap=0;
+  const name=stages[idx];
+  const textEl=el.querySelector(".stage-text");
+  const zone=el.querySelector(".jump-zone");
+
+  // Long press
+  zone.addEventListener("pointerdown",()=>{
+    longPressTimer=setTimeout(()=>{stageIndex=idx; showModal(name);},600);
   });
-}
-function hideModal(){
-  modal.classList.remove("show");
-  setTimeout(()=>{ modal.style.display = "none"; }, 300);
-}
+  zone.addEventListener("pointerup",()=>clearTimeout(longPressTimer));
 
-/* ===== STAGE INTERACTIONS ===== */
-function setupStage(el, idx){
-  let lastTap = 0;
-  const DOUBLE_TAP_DELAY = 300;
-  const stageName = stages[idx];
-  const textEl = el.querySelector(".stage-text");
-  const zoneEl = el.querySelector(".jump-zone");
-
-  // LONG PRESS → SHOW MODAL
-  zoneEl.addEventListener("pointerdown", ()=>{
-    longPressTimer = setTimeout(()=>{
-      stageIndex = idx;
-      showModal(stageName);
-    }, 600);
-  });
-  zoneEl.addEventListener("pointerup", ()=>clearTimeout(longPressTimer));
-
-  // SINGLE / DOUBLE TAP
-  textEl.addEventListener("click", ()=>{
-    let now = new Date().getTime();
-    stageIndex = idx;
-    if(now - lastTap < DOUBLE_TAP_DELAY){
-      stageNumbers[stageName] = Math.max(1, stageNumbers[stageName]-1);
-      updateDisplay();
-      announce();
-      lastTap = 0;
-    } else {
-      stageNumbers[stageName]++;
-      updateDisplay();
-      announce();
-      lastTap = now;
-    }
-  });
-
-  // SWIPE DETECTION
-  el.addEventListener("pointerdown", e=>{ startY = e.clientY; });
-  el.addEventListener("pointerup", e=>{
-    if(startY === null) return;
-    let deltaY = startY - e.clientY;
-    if(Math.abs(deltaY) > 30){
-      stageIndex = idx;
-      if(deltaY > 0){ stageNumbers[stageName]++; }
-      else { stageNumbers[stageName] = Math.max(1, stageNumbers[stageName]-1); }
-      updateDisplay();
-      announce();
-    }
-    startY = null;
+  // Tap / double-tap
+  textEl.addEventListener("click",()=>{
+    const now=Date.now();
+    stageIndex=idx;
+    if(now-lastTap<300){stageNumbers[name]=Math.max(1,stageNumbers[name]-1); lastTap=0;}
+    else{stageNumbers[name]++; lastTap=now;}
+    updateDisplay(); announce();
   });
 }
 
-/* APPLY TO ALL STAGES */
-Object.values(stageEls).forEach((el, idx)=>{ setupStage(el, idx); });
-
-/* MODAL OK BUTTON */
-modalOk.addEventListener("click", ()=>{
-  let n = parseInt(modalInput.value);
-  if(!isNaN(n) && n>0){
-    stageNumbers[stages[stageIndex]] = n;
-    updateDisplay();
-    announce();
-  }
+/* ===== MODAL BUTTON ===== */
+modalOk.addEventListener("click",()=>{
+  const n=parseInt(modalInput.value);
+  if(n>0){ stageNumbers[stages[stageIndex]]=n; updateDisplay(); announce(); }
   hideModal();
 });
+modal.addEventListener("click",e=>{if(e.target===modal) hideModal();});
 
-/* CLOSE MODAL ESC / BACKGROUND */
-document.addEventListener("keydown", e=>{
-  if(e.key === "Escape") hideModal();
-});
-modal.addEventListener("click", e=>{
-  if(e.target === modal) hideModal();
+/* ===== RIGHT CLICK BLOCK ===== */
+document.addEventListener("contextmenu",e=>e.preventDefault());
+window.oncontextmenu=()=>false;
+
+/* ===== START SCREEN FULLSCREEN ===== */
+startScreen.addEventListener("click", ()=>{
+  const el=document.documentElement;
+  if(el.requestFullscreen) el.requestFullscreen();
+  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+
+  startScreen.style.display="none";
+  container.style.display="flex";
+
+  // Preload audio & voices
+  beep.load();
+  if('speechSynthesis' in window) speechSynthesis.getVoices();
+
+  // Setup stage events AFTER fullscreen + tiny delay
+  setTimeout(()=>{
+    Object.values(stageEls).forEach((el,i)=>setupStage(el,i));
+    updateDisplay();
+  },50);
 });
 
-/* ===== INITIAL LOAD ===== */
+/* ===== INIT ===== */
 loadState();
 updateDisplay();
 </script>
+
 </body>
 </html>
